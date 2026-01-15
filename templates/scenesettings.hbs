@@ -1,0 +1,21 @@
+<div class="tab" data-tab="htmltoscene">
+    
+    <!-- Enable Switch (Full Line) -->
+    <div class="form-group">
+        <label class="checkbox" style="display: flex; align-items: center; width: 100%; cursor: pointer;">
+            <input type="checkbox" name="flags.htmltoscene.enable" data-dtype="Boolean" {{#if enable}} checked{{/if}} style="flex: 0 0 auto; margin-right: 10px;">
+            Enable HTML Scene Support
+        </label>
+    </div>
+
+    <hr>
+
+    <!-- URL/File Path -->
+    <div class="form-group" style="flex-direction: column; align-items: flex-start; margin-bottom: 5px;">
+        <label style="margin-bottom: 5px; font-weight: bold;">Website URL</label>
+        <div class="form-fields" style="width: 100%;">
+            <input type="text" name="flags.htmltoscene.fileLoc" placeholder="https://example.com" value="{{fileLoc}}" style="width: 100%;">
+        </div>
+        <p class="notes" style="margin-top: 5px;">Enter the URL of the website you want to display.</p>
+    </div>
+</div>

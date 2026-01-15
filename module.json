@@ -1,0 +1,39 @@
+{
+  "id": "webscene",
+  "title": "Web Scene",
+  
+  "description": "Put a website inside Foundry VTT replacing a scene.",
+  
+  "authors": [
+    {
+      "name": "Mestre Digital",
+      "url": ""
+    }
+  ],
+  
+  "url": "https://github.com/brunocalado/webscene",
+  "manifest": "https://github.com/brunocalado/webscene/raw/refs/heads/main/module.json",
+  "download": "https://codeload.github.com/brunocalado/webscene/zip/main",
+  
+  "version": "0.0.1",
+  
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13",
+    "maximum": "13"
+  },
+  "esmodules": [
+    "scripts/main.js",
+    "scripts/htmltoscene.js",
+    "scripts/interface.js"
+  ],
+  
+  "styles": [],
+  "languages": [],
+  "packs": [],
+  "relationships": {
+    "systems": [],
+    "requires": []
+  }
+
+}
