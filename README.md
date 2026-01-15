@@ -1,4 +1,4 @@
-# web Scene
+# Web Scene
 
 **Put a website inside Foundry VTT replacing a scene.**
 

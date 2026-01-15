@@ -15,7 +15,7 @@
   "manifest": "https://github.com/brunocalado/webscene/raw/refs/heads/main/module.json",
   "download": "https://codeload.github.com/brunocalado/webscene/zip/main",
   
-  "version": "0.0.1",
+  "version": "0.0.2",
   
   "compatibility": {
     "minimum": "13",

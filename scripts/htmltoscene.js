@@ -1,63 +1,77 @@
 import { FoundryVTTInterface } from './interface.js';
-import { ModuleInfo } from './main.js';
+
+/* --- CONSTANTS --- */
+// ATENÇÃO: Deve ser idêntico ao "id" no module.json e ao nome da pasta
+export const MODULE_ID = 'webscene'; 
+export const MODULE_NAME = 'Web Scene';
+
+export const TEMPLATES = {
+    SCENE_SETTINGS: `modules/${MODULE_ID}/templates/scenesettings.hbs`
+};
+
+export const FLAGS = {
+    ENABLE: 'enable',
+    FILE_LOC: 'fileLoc'
+};
 
 /**
  * HTML To Scene static class
  * Handles iframe injection and UI toggling.
  */
-class HTMLToScene {
-	static _iFrameNode;
+export class HTMLToScene {
+    static _iFrameNode;
     static _toggleBtn;
     static _uiHidden = false;
 
-	/** Getters for Defaults */
-	static get fileLocation() { return ''; }
-	
+    /** Getters for Defaults */
+    static get fileLocation() { return ''; }
+
     /** Flag Getters **/
-	static get flags() {
-		return canvas.scene?.flags?.htmltoscene ?? {};
-	}
+    static get flags() {
+        return canvas.scene?.flags?.[MODULE_ID] ?? {};
+    }
 
-	static get enabled() { return Boolean(this.flags.enable); }
-	static get fileLoc() { return String(this.flags.fileLoc ?? this.fileLocation); }
+    static get enabled() { return Boolean(this.flags[FLAGS.ENABLE]); }
+    static get fileLoc() { return String(this.flags[FLAGS.FILE_LOC] ?? this.fileLocation); }
 
-	static init(...args) {
-		const loadTemplates = foundry.applications.handlebars.loadTemplates;
-		loadTemplates(['modules/html-to-scene/templates/scenesettings.hbs']);
-		console.log(ModuleInfo.moduleprefix + 'Loaded');
-	}
+    static init() {
+        const loadTemplates = foundry.applications.handlebars.loadTemplates;
+        loadTemplates([TEMPLATES.SCENE_SETTINGS]);
+        console.log(`${MODULE_NAME} | Loaded`);
+    }
 
     /**
      * Main function to handle scene replacement
      */
-	static replace(...args) {
-		// Clean up existing elements
+    static replace() {
+        // Clean up existing elements
         this.removeIframe();
         this.removeToggleBtn();
 
-		if (!this.enabled || !this.fileLoc) {
-			return;
-		}
+        // Check conditions
+        if (!canvas.scene || !this.enabled || !this.fileLoc) {
+            return;
+        }
 
-		console.log(ModuleInfo.moduleprefix + 'Activating HTML Scene...');
+        console.log(`${MODULE_NAME} | Activating HTML Scene...`);
 
-		// Create and insert iframe
-		const iframe = this.createIframe();
+        // Create and insert iframe
+        const iframe = this.createIframe();
         document.body.appendChild(iframe);
-        
+
         // Create Floating UI Toggle Button
         this.createToggleBtn();
 
         // Pass Foundry API to iframe
         this.passDataToIFrame();
-	}
+    }
 
-	static removeIframe() {
-		if (this._iFrameNode) {
-			this._iFrameNode.remove();
-			this._iFrameNode = null;
-		}
-	}
+    static removeIframe() {
+        if (this._iFrameNode) {
+            this._iFrameNode.remove();
+            this._iFrameNode = null;
+        }
+    }
 
     /* --- FLOATING BUTTON & UI TOGGLE --- */
 
@@ -65,12 +79,12 @@ class HTMLToScene {
         const btn = document.createElement('button');
         btn.innerHTML = '<i class="fas fa-eye"></i>';
         btn.title = "Toggle UI";
-        btn.id = "htmltoscene-toggle-ui";
-        
-        // Styles for floating button (Bottom Right)
+        btn.id = `${MODULE_ID}-toggle-ui`;
+
+        // Styles for floating button
         Object.assign(btn.style, {
             position: 'fixed',
-            bottom: '120px', // Above standard hotbar height usually
+            bottom: '120px',
             right: '20px',
             width: '50px',
             height: '50px',
@@ -78,7 +92,7 @@ class HTMLToScene {
             background: 'rgba(0, 0, 0, 0.7)',
             color: 'white',
             border: '2px solid #ff6400',
-            zIndex: '1000', // Above almost everything
+            zIndex: '1000',
             cursor: 'pointer',
             fontSize: '20px',
             display: 'flex',
@@ -102,8 +116,7 @@ class HTMLToScene {
             this._toggleBtn.remove();
             this._toggleBtn = null;
         }
-        // Ensure UI is restored if we leave the scene
-        this.toggleUI(true); 
+        this.toggleUI(true);
     }
 
     static toggleUI(forceShow = false) {
@@ -116,152 +129,126 @@ class HTMLToScene {
         ];
 
         if (forceShow || this._uiHidden) {
-            // Show UI
-            uiElements.forEach(el => {
-                if(el) el.style.display = '';
-            });
-            if(this._toggleBtn) this._toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            uiElements.forEach(el => { if (el) el.style.display = ''; });
+            if (this._toggleBtn) this._toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
             this._uiHidden = false;
         } else {
-            // Hide UI
-            uiElements.forEach(el => {
-                if(el) el.style.display = 'none';
-            });
-            if(this._toggleBtn) this._toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            uiElements.forEach(el => { if (el) el.style.display = 'none'; });
+            if (this._toggleBtn) this._toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
             this._uiHidden = true;
         }
     }
 
     /* --- IFRAME CREATION --- */
 
-	static createIframe() {
-		let src = this.fileLoc;
-		
-        // Auto-fix URL protocol if missing
+    static createIframe() {
+        let src = this.fileLoc;
+
+        // Auto-fix URL
         if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('/') && !src.startsWith('file:///')) {
-			if (src.includes('.') && !src.endsWith('.html')) {
-				src = 'https://' + src;
-			}
-		}
+            if (src.includes('.') && !src.endsWith('.html')) {
+                src = 'https://' + src;
+            }
+        }
 
-		const ifrm = document.createElement('iframe');
-		ifrm.setAttribute('src', src);
-		ifrm.setAttribute('id', ModuleInfo.moduleapp);
-		
-		ifrm.style.border = '0';
-		ifrm.style.position = 'fixed';
-		ifrm.style.left = '0';
-		ifrm.style.top = '0';
-		ifrm.style.width = '100vw';
-		ifrm.style.height = '100vh';
-        ifrm.style.backgroundColor = "black";
-        ifrm.style.zIndex = '10'; // Above canvas, below UI
-		
-		this._iFrameNode = ifrm;
-		return this._iFrameNode;
-	}
+        const ifrm = document.createElement('iframe');
+        ifrm.setAttribute('src', src);
+        ifrm.setAttribute('id', `${MODULE_ID}-iframe`);
 
-    /* Data Passing */
-	static passDataToIFrame() {
-        if(!this._iFrameNode) return;
-        
-		try {
-            if(this._iFrameNode.contentWindow) {
+        Object.assign(ifrm.style, {
+            border: '0',
+            position: 'fixed',
+            left: '0',
+            top: '0',
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: "black",
+            zIndex: '10'
+        });
+
+        this._iFrameNode = ifrm;
+        return this._iFrameNode;
+    }
+
+    static passDataToIFrame() {
+        if (!this._iFrameNode) return;
+
+        try {
+            if (this._iFrameNode.contentWindow) {
                 this._iFrameNode.contentWindow.FoundryVTT = FoundryVTTInterface;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         this._iFrameNode.addEventListener('load', () => {
-             try {
+            try {
                 this._iFrameNode.contentWindow.FoundryVTT = FoundryVTTInterface;
                 Hooks.call('htmlToSceneReady', this);
-            } catch (e) {}
+            } catch (e) { }
         });
-	}
+    }
 
-    /* --- SCENE CONFIGURATION INJECTION --- */
+    /* --- SCENE CONFIG --- */
 
-	static async renderSceneConfig(app, html, data) {
-		let ui = html;
-		if (typeof jQuery !== 'undefined' && (ui instanceof jQuery || ui.jquery)) {
-			ui = ui[0];
-		}
-
+    static async renderSceneConfig(app, html, data) {
+        // V13 HTMLElement support
+        const ui = (html instanceof HTMLElement) ? html : html[0];
         const nav = ui.querySelector('nav.sheet-tabs');
         if (!nav) return;
 
-        // 1. Add Tab Button
-        if (nav.querySelector('[data-tab="htmltoscene"]')) return;
+        if (nav.querySelector(`[data-tab="${MODULE_ID}"]`)) return;
 
+        // Add Tab
         const newTab = document.createElement('a');
         newTab.className = 'item';
-        newTab.dataset.tab = 'htmltoscene';
+        newTab.dataset.tab = MODULE_ID;
         newTab.innerHTML = `<i class="fas fa-desktop"></i> HTML`;
         nav.appendChild(newTab);
 
-        // 2. Prepare Data & Render
-        const flags = app.document.flags?.htmltoscene || {};
+        // Render Content
+        const flags = app.document.flags?.[MODULE_ID] || {};
         const templateData = {
-            enable: flags.enable ?? false,
-            fileLoc: flags.fileLoc ?? ''
+            // Passamos o module ID para o template usar nos nomes dos inputs
+            moduleId: MODULE_ID, 
+            enable: flags[FLAGS.ENABLE] ?? false,
+            fileLoc: flags[FLAGS.FILE_LOC] ?? ''
         };
 
-        const renderTemplate = foundry.applications.handlebars.renderTemplate;
-        const contentHtml = await renderTemplate('modules/html-to-scene/templates/scenesettings.hbs', templateData);
-
-        // 3. Inject Content Correctly
+        const contentHtml = await foundry.applications.handlebars.renderTemplate(TEMPLATES.SCENE_SETTINGS, templateData);
+        
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = contentHtml;
         const contentDiv = tempDiv.firstElementChild;
 
+        // Insert Content
         const existingTab = ui.querySelector('.tab[data-tab]');
         if (existingTab) {
             existingTab.parentNode.insertBefore(contentDiv, existingTab.nextSibling);
         } else {
-            // Fallback: look for sheet-body or form
             const body = ui.querySelector('.sheet-body') || ui.querySelector('form');
-            if (body) {
-                // If appending to form, try to insert before the footer/submit button
-                const footer = body.querySelector('footer, button[type="submit"]');
-                if (footer) {
-                    body.insertBefore(contentDiv, footer);
-                } else {
-                    body.appendChild(contentDiv);
-                }
-            }
+            if (body) body.appendChild(contentDiv);
         }
 
-        // 4. Tab Click Handling
+        // Click Handler
         newTab.addEventListener('click', (ev) => {
             ev.preventDefault();
-            
-            // Nav State
             nav.querySelectorAll('.item').forEach(el => el.classList.remove('active'));
-            newTab.classList.add('active');
-
-            // Content State
-            // We need to find the parent container of our contentDiv to hide siblings
             const container = contentDiv.parentElement;
             container.querySelectorAll('.tab').forEach(el => {
                 el.classList.remove('active');
                 el.style.display = 'none';
             });
-
+            newTab.classList.add('active');
             contentDiv.classList.add('active');
             contentDiv.style.display = 'block';
-
-            if(app.setPosition) app.setPosition({height: "auto"});
+            if (app.setPosition) app.setPosition({ height: "auto" });
         });
 
-        // Other Tabs Handling
-        nav.querySelectorAll('.item:not([data-tab="htmltoscene"])').forEach(otherTab => {
+        nav.querySelectorAll(`.item:not([data-tab="${MODULE_ID}"])`).forEach(otherTab => {
             otherTab.addEventListener('click', () => {
                 newTab.classList.remove('active');
                 contentDiv.classList.remove('active');
                 contentDiv.style.display = 'none';
             });
         });
-	}
+    }
 }
-
-export { HTMLToScene };

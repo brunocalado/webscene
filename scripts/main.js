@@ -1,66 +1,46 @@
-import { HTMLToScene } from './htmltoscene.js';
+import { HTMLToScene, MODULE_ID, MODULE_NAME } from './htmltoscene.js';
 
 /**
- * Contains information that is used in various parts of the module.
- * @class ModuleInfo
- */
-class ModuleInfo {
-	static moduleprefix = 'HTML to Scene | ';
-	static moduleid = 'html-to-scene';
-	static moduleapp = 'html-to-scene';
-}
-
-/**
- * @module html-to-scene.HTMLToSceneCompat
+ * @module webscene.HTMLToSceneCompat
  */
 class HTMLToSceneCompat {
-	static checkModule(moduleId) {
-		const module = game.modules.get(moduleId);
-		return module?.active ?? false;
-	}
+    static checkModule(moduleId) {
+        const module = game.modules.get(moduleId);
+        return module?.active ?? false;
+    }
 }
 
 /**
- * @module html-to-scene.ModuleSettings
+ * @module webscene.ModuleSettings
  */
 class ModuleSettings {
-	static registerSettings() {
-		const WORLD = 'world';
-
-		game.settings.register(ModuleInfo.moduleid, 'showFoundryLogo', {
-			name: "Show Foundry Logo",
-			hint: "If enabled, the Foundry VTT logo will remain visible.",
-			scope: WORLD,
-			config: true,
-			default: !HTMLToSceneCompat.checkModule('minimal-ui'),
-			type: Boolean,
-		});
-	}
+    static registerSettings() {
+        game.settings.register(MODULE_ID, 'showFoundryLogo', {
+            name: "Show Foundry Logo",
+            hint: "If enabled, the Foundry VTT logo will remain visible.",
+            scope: 'world',
+            config: true,
+            default: !HTMLToSceneCompat.checkModule('minimal-ui'),
+            type: Boolean,
+        });
+    }
 }
 
 /**
- * @module html-to-scene.HTMLToSceneHooks
+ * Hooks Registration
  */
-class HTMLToSceneHooks {
-	static hook() {
-		// Initialize: Load templates
-		Hooks.once('init', (...args) => HTMLToScene.init(...args));
+Hooks.once('init', () => {
+    ModuleSettings.registerSettings();
+    HTMLToScene.init();
+});
 
-		// Scene Rendering: Replace background
-		Hooks.on('canvasReady', (...args) => HTMLToScene.replace(...args));
-		Hooks.on('updateScene', (...args) => HTMLToScene.replace(...args));
+Hooks.on('canvasReady', () => HTMLToScene.replace());
+Hooks.on('updateScene', () => HTMLToScene.replace());
 
-		// Config Injection: Add tab to Scene Config
-		Hooks.on('renderSceneConfig', (app, html, data) =>
-			HTMLToScene.renderSceneConfig(app, html, data)
-		);
-		
-		// IFrame Communication (Simplified: Automatic)
-		Hooks.on('htmlToSceneIFrameReady', () => HTMLToScene.passDataToIFrame());
-	}
-}
+Hooks.on('renderSceneConfig', (app, html, data) => {
+    HTMLToScene.renderSceneConfig(app, html, data);
+});
 
-/* Initialize Hooks */
-HTMLToSceneHooks.hook();
+Hooks.on('htmlToSceneIFrameReady', () => HTMLToScene.passDataToIFrame());
 
-export { ModuleInfo, ModuleSettings };
+console.log(`${MODULE_NAME} | Hooks Initialized`);
